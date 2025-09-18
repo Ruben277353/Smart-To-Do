@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата 500 рублей - Smart To-Do List</title>
+    <link rel="stylesheet" href="../style/plata.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+
+</head>
+<body>
+<div class="container">
+    <div class="left-panel">
+        <h1>Оплата</h1>
+        <div class="price">500 ₽</div>
+
+        <div class="secure">
+            <i data-feather="lock"></i> Безопасная оплата через SSL шифрование
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <h2>Оплата своей ошибки</h2>
+
+
+
+        <form class="payment-form">
+            <div class="input-group">
+
+                <input type="text" placeholder="Имя на карте" required>
+            </div>
+
+            <div class="input-group">
+
+                <input type="text" placeholder="Номер карты" required>
+            </div>
+
+            <div class="row">
+                <div class="input-group">
+
+                    <input type="text" placeholder="ММ/ГГ" required>
+                </div>
+
+                <div class="input-group">
+
+                    <input type="text" placeholder="CVV" required>
+                </div>
+            </div>
+
+            <div class="input-group">
+
+                <input type="email" placeholder="Email для чека" required>
+            </div>
+
+            <button type="submit" class="btn">
+                Оплатить 500 ₽
+            </button>
+        </form>
+
+        <div class="secure">
+            <i data-feather="shield"></i> Ваши данные защищены
+        </div>
+    </div>
+</div>
+
+<script>
+    // Инициализация feather icons
+    feather.replace();
+
+    // Выбор способа оплаты
+    const paymentMethods = document.querySelectorAll('.payment-method');
+    paymentMethods.forEach(method => {
+        method.addEventListener('click', () => {
+            paymentMethods.forEach(m => m.classList.remove('active'));
+            method.classList.add('active');
+        });
+    });
+
+    // Обработка формы оплаты
+    document.querySelector('.payment-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Оплата прошла успешно! Спасибо за покупку премиум подписки.');
+        // В реальном приложении здесь будет перенаправление на страницу успешной оплаты
+    });
+</script>
+</body>
+</html>

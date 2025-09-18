@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация - Smart To-Do List</title>
+    <link rel="stylesheet" href="../style/regs.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+
+</head>
+<body>
+<div class="wrapper">
+    <div class="form-box">
+        <h2>Регистрация</h2>
+        <form id="registrationForm">
+            <div class="input-group">
+                <input type="text" id="name" placeholder="Ваше имя" required>
+                <div class="error-message" id="nameError"></div>
+            </div>
+
+            <div class="input-group">
+                <input type="email" id="email" placeholder="Email" required>
+                <div class="error-message" id="emailError"></div>
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Пароль" required>
+                <div class="error-message" id="passwordError"></div>
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="confirmPassword" placeholder="Повторите пароль" required>
+                <div class="error-message" id="confirmPasswordError"></div>
+            </div>
+
+            <div class="terms">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">Я принимаю <a href="pravila.html">условия использования</a></label>
+            </div>
+            <div class="error-message" id="termsError"></div>
+
+            <button type="submit" class="btn">Зарегистрироваться</button>
+
+            <div class="sign-link">
+                <p>Уже есть аккаунт? <a href="log.html">Войдите</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Инициализация feather icons
+    feather.replace();
+
+    // Валидация формы
+    document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); // Важно: предотвращаем перезагрузку страницы
+
+        let isValid = true;
+        const name = document.getElementById('name');
+        const email = document.getElementById('email');
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirmPassword');
+        const terms = document.getElementById('terms');
+
+        // Сброс сообщений об ошибках
+        document.querySelectorAll('.error-message').forEach(el => {
+            el.style.display = 'none';
+        });
+
+        // Валидация имени
+        if (!name.value.trim()) {
+            document.getElementById('nameError').textContent = 'Поле "Имя" обязательно для заполнения';
+            document.getElementById('nameError').style.display = 'block';
+            isValid = false;
+        }
+
+        // Валидация email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email.value.trim()) {
+            document.getElementById('emailError').textContent = 'Поле "Email" обязательно для заполнения';
+            document.getElementById('emailError').style.display = 'block';
+            isValid = false;
+        } else if (!emailRegex.test(email.value)) {
+            document.getElementById('emailError').textContent = 'Введите корректный email адрес';
+            document.getElementById('emailError').style.display = 'block';
+            isValid = false;
+        }
+
+        // Валидация пароля
+        if (!password.value) {
+            document.getElementById('passwordError').textContent = 'Поле "Пароль" обязательно для заполнения';
+            document.getElementById('passwordError').style.display = 'block';
+            isValid = false;
+        } else if (password.value.length < 6) {
+            document.getElementById('passwordError').textContent = 'Пароль должен содержать не менее 6 символов';
+            document.getElementById('passwordError').style.display = 'block';
+            isValid = false;
+        }
+
+        // Подтверждение пароля
+        if (password.value !== confirmPassword.value) {
+            document.getElementById('confirmPasswordError').textContent = 'Пароли не совпадают';
+            document.getElementById('confirmPasswordError').style.display = 'block';
+            isValid = false;
+        }
+
+        // Проверка принятия условий
+        if (!terms.checked) {
+            document.getElementById('termsError').textContent = 'Необходимо принять условия использования';
+            document.getElementById('termsError').style.display = 'block';
+            isValid = false;
+        }
+
+        // Если форма валидна, отправляем данные на сервер
+        if (isValid) {
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: name.value.trim(),
+                        email: email.value.trim(),
+                        password: password.value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Регистрация успешна! Теперь вы можете войти.');
+                    window.location.href = '/log.html'; // Перенаправляем на страницу входа
+                } else {
+                    alert('Ошибка регистрации: ' + data.error);
+                }
+            } catch (error) {
+                alert('Ошибка сети: ' + error.message);
+            }
+        }
+    });
+</script>
+</body>
+</html>

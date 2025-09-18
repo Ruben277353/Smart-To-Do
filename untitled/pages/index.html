@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart To-Do List</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        .task-high { border-left: 4px solid #ef4444; }
+        .task-medium { border-left: 4px solid #f59e0b; }
+        .task-low { border-left: 4px solid #10b981; }
+        .category-work { background-color: #e0f2fe; }
+        .category-personal { background-color: #ecfccb; }
+        .category-study { background-color: #fce7f3; }
+        .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<div id="app" class="max-w-4xl mx-auto p-4">
+
+    <!-- Tabs -->
+    <div class="flex border-b mb-6">
+        <button onclick="switchTab('tasks')" class="px-4 py-2 font-medium tab-active">My Tasks</button>
+        <button onclick="switchTab('calendar')" class="px-4 py-2 font-medium text-gray-600 hover:text-gray-800">Calendar</button>
+        <button onclick="switchTab('stats')" class="px-4 py-2 font-medium text-gray-600 hover:text-gray-800">Statistics</button>
+    </div>
+
+    <!-- Tasks Tab -->
+    <div id="tasksTab">
+        <!-- Add Task Form -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex items-center mb-4">
+                <input type="text" id="newTaskInput" placeholder="Add a new task..." class="flex-grow px-4 py-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="addTask()" class="px-4 py-2 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600">
+                    <i data-feather="plus"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-gray-700 mb-2">Priority</label>
+                    <select id="taskPriority" class="w-full px-3 py-2 border rounded-lg">
+                        <option value="high">High</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Category</label>
+                    <select id="taskCategory" class="w-full px-3 py-2 border rounded-lg">
+                        <option value="work">Work</option>
+                        <option value="personal" selected>Personal</option>
+                        <option value="study">Study</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Deadline</label>
+                    <input type="date" id="taskDeadline" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Filters -->
+        <div class="flex flex-wrap gap-2 mb-4">
+            <button onclick="filterTasks('all')" class="px-3 py-1 bg-blue-500 text-white rounded-full text-sm">All</button>
+            <button onclick="filterTasks('high')" class="px-3 py-1 bg-red-500 text-white rounded-full text-sm">High Priority</button>
+            <button onclick="filterTasks('medium')" class="px-3 py-1 bg-yellow-500 text-white rounded-full text-sm">Medium Priority</button>
+            <button onclick="filterTasks('low')" class="px-3 py-1 bg-green-500 text-white rounded-full text-sm">Low Priority</button>
+            <button onclick="filterTasks('work')" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Work</button>
+            <button onclick="filterTasks('personal')" class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Personal</button>
+            <button onclick="filterTasks('study')" class="px-3 py-1 bg-pink-100 text-pink-800 rounded-full text-sm">Study</button>
+            <button onclick="filterTasks('today')" class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">Due Today</button>
+        </div>
+
+        <!-- Task List -->
+        <div id="taskList" class="space-y-3">
+            <!-- Sample tasks will be added here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Calendar Tab -->
+    <div id="calendarTab" class="hidden">
+        <div class="bg-white rounded-lg shadow p-4">
+            <h2 class="text-xl font-semibold mb-4">Calendar View</h2>
+            <div class="grid grid-cols-7 gap-1 mb-2">
+                <div class="text-center font-medium py-2">Sun</div>
+                <div class="text-center font-medium py-2">Mon</div>
+                <div class="text-center font-medium py-2">Tue</div>
+                <div class="text-center font-medium py-2">Wed</div>
+                <div class="text-center font-medium py-2">Thu</div>
+                <div class="text-center font-medium py-2">Fri</div>
+                <div class="text-center font-medium py-2">Sat</div>
+            </div>
+            <div class="grid grid-cols-7 gap-1">
+                <!-- Calendar days will be populated by JavaScript -->
+                <div class="h-24 border p-1">1</div>
+                <div class="h-24 border p-1">2</div>
+                <div class="h-24 border p-1">3</div>
+                <div class="h-24 border p-1">4</div>
+                <div class="h-24 border p-1">5</div>
+                <div class="h-24 border p-1">6</div>
+                <div class="h-24 border p-1">7</div>
+                <!-- More days... -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Tab -->
+    <div id="statsTab" class="hidden">
+        <div class="bg-white rounded-lg shadow p-4">
+            <h2 class="text-xl font-semibold mb-4">Task Statistics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-medium text-blue-800">Tasks Completed</h3>
+                    <p class="text-3xl font-bold text-blue-600">12</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h3 class="font-medium text-green-800">Tasks Pending</h3>
+                    <p class="text-3xl font-bold text-green-600">5</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg">
+                    <h3 class="font-medium text-yellow-800">Overdue</h3>
+                    <p class="text-3xl font-bold text-yellow-600">2</p>
+                </div>
+            </div>
+            <div class="mt-6">
+                <h3 class="font-medium mb-2">Tasks by Priority</h3>
+                <div class="h-64">
+                    <!-- Chart would be rendered here -->
+                    <div class="bg-gray-100 rounded-lg h-full flex items-center justify-center text-gray-400">
+                        Priority Chart Placeholder
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize feather icons
+    feather.replace();
+
+    // Current user
+    let currentUser = null;
+    let authToken = localStorage.getItem('authToken');
+
+    // Load tasks from server
+    async function loadTasks() {
+        if (!authToken) {
+            window.location.href = '/log.html';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/tasks', {
+                headers: {
+                    'Authorization': `Basic ${authToken}`
+                }
+            });
+
+            if (response.ok) {
+                const tasks = await response.json();
+                renderTasks(tasks);
+            } else if (response.status === 401) {
+                localStorage.removeItem('authToken');
+                window.location.href = '/log.html';
+            } else {
+                console.error('Ошибка загрузки задач:', response.status);
+            }
+        } catch (error) {
+            console.error('Ошибка сети:', error);
+        }
+    }
+
+    // Render tasks
+    function renderTasks(tasksArray, filter = 'all') {
+        const taskList = document.getElementById('taskList');
+        taskList.innerHTML = '';
+
+        let filteredTasks = tasksArray;
+
+        // Фильтрация
+        switch (filter) {
+            case 'high': filteredTasks = tasksArray.filter(task => task.priority === 'high'); break;
+            case 'medium': filteredTasks = tasksArray.filter(task => task.priority === 'medium'); break;
+            case 'low': filteredTasks = tasksArray.filter(task => task.priority === 'low'); break;
+            case 'work': filteredTasks = tasksArray.filter(task => task.category === 'work'); break;
+            case 'personal': filteredTasks = tasksArray.filter(task => task.category === 'personal'); break;
+            case 'study': filteredTasks = tasksArray.filter(task => task.category === 'study'); break;
+            case 'today':
+                const today = new Date().toISOString().split('T')[0];
+                filteredTasks = tasksArray.filter(task => task.deadline === today);
+                break;
+            case 'completed': filteredTasks = tasksArray.filter(task => task.completed); break;
+        }
+
+        if (filteredTasks.length === 0) {
+            taskList.innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <i data-feather="inbox" class="w-16 h-16 mx-auto mb-4"></i>
+                    <p>Задачи не найдены</p>
+                </div>
+            `;
+            feather.replace();
+            return;
+        }
+
+        filteredTasks.forEach(task => {
+            const taskElement = createTaskElement(task);
+            taskList.appendChild(taskElement);
+        });
+
+        feather.replace();
+    }
+
+    function createTaskElement(task) {
+        const taskElement = document.createElement('div');
+        taskElement.className = `bg-white rounded-lg shadow p-4 flex items-start ${task.completed ? 'opacity-70' : ''} task-${task.priority} category-${task.category}`;
+
+        const priorityColors = {
+            high: 'red',
+            medium: 'yellow',
+            low: 'green'
+        };
+
+        const categoryIcons = {
+            work: 'briefcase',
+            personal: 'home',
+            study: 'book'
+        };
+
+        taskElement.innerHTML = `
+            <div class="flex items-start space-x-3 w-full">
+                <input type="checkbox" ${task.completed ? 'checked' : ''}
+                    onchange="toggleTaskCompletion('${task.id}')"
+                    class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-blue-500">
+
+                <div class="flex-grow">
+                    <div class="flex items-start justify-between">
+                        <span class="${task.completed ? 'line-through text-gray-500' : 'text-gray-800'} text-lg font-medium">
+                            ${task.text}
+                        </span>
+                        <button onclick="deleteTask('${task.id}')" class="text-gray-400 hover:text-red-500 ml-2">
+                            <i data-feather="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="px-3 py-1 rounded-full text-xs font-medium bg-${priorityColors[task.priority]}-100 text-${priorityColors[task.priority]}-800">
+                            <i data-feather="${task.priority === 'high' ? 'alert-circle' : task.priority === 'medium' ? 'clock' : 'check-circle'}" class="w-3 h-3 inline mr-1"></i>
+                            ${task.priority === 'high' ? 'Высокий' : task.priority === 'medium' ? 'Средний' : 'Низкий'}
+                        </span>
+
+                        <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <i data-feather="${categoryIcons[task.category]}" class="w-3 h-3 inline mr-1"></i>
+                            ${task.category === 'work' ? 'Работа' : task.category === 'personal' ? 'Личное' : 'Учёба'}
+                        </span>
+
+                        ${task.deadline ? `
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <i data-feather="calendar" class="w-3 h-3 inline mr-1"></i>
+                                ${formatDate(task.deadline)}
+                                ${isOverdue(task.deadline) ? ' (Просрочено)' : ''}
+                            </span>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        return taskElement;
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ru-RU');
+    }
+
+    function isOverdue(dateString) {
+        if (!dateString) return false;
+        const taskDate = new Date(dateString);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return taskDate < today && !isNaN(taskDate.getTime());
+    }
+
+    // Add new task
+    async function addTask() {
+        const input = document.getElementById('newTaskInput');
+        const priority = document.getElementById('taskPriority').value;
+        const category = document.getElementById('taskCategory').value;
+        const deadline = document.getElementById('taskDeadline').value;
+
+        if (input.value.trim() === '') {
+            alert('Введите описание задачи');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Basic ${authToken}`
+                },
+                body: JSON.stringify({
+                    text: input.value.trim(),
+                    priority,
+                    category,
+                    deadline: deadline || null
+                })
+            });
+
+            if (response.ok) {
+                input.value = '';
+                loadTasks(); // Перезагружаем задачи
+            } else {
+                alert('Ошибка при добавлении задачи');
+            }
+        } catch (error) {
+            console.error('Error adding task:', error);
+            alert('Ошибка сети');
+        }
+    }
+
+    // Toggle task completion
+    async function toggleTaskCompletion(taskId) {
+        try {
+            // Сначала получаем текущую задачу
+            const response = await fetch('/api/tasks', {
+                headers: {
+                    'Authorization': `Basic ${authToken}`
+                }
+            });
+
+            if (response.ok) {
+                const tasks = await response.json();
+                const task = tasks.find(t => t.id === taskId);
+
+                if (task) {
+                    const updateResponse = await fetch(`/api/tasks/${taskId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Basic ${authToken}`
+                        },
+                        body: JSON.stringify({
+                            ...task,
+                            completed: !task.completed
+                        })
+                    });
+
+                    if (updateResponse.ok) {
+                        loadTasks(); // Перезагружаем задачи
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error updating task:', error);
+        }
+    }
+
+    // Delete task
+    async function deleteTask(taskId) {
+        if (!confirm('Удалить эту задачу?')) return;
+
+        try {
+            const response = await fetch(`/api/tasks/${taskId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Basic ${authToken}`
+                }
+            });
+
+            if (response.ok) {
+                loadTasks(); // Перезагружаем задачи
+            }
+        } catch (error) {
+            console.error('Error deleting task:', error);
+        }
+    }
+
+    function filterTasks(filter) {
+        loadTasks().then(() => {
+            // Фильтрация применяется при рендеринге
+        });
+    }
+
+    function switchTab(tabName) {
+        document.getElementById('tasksTab').classList.add('hidden');
+        document.getElementById('calendarTab').classList.add('hidden');
+        document.getElementById('statsTab').classList.add('hidden');
+
+        document.getElementById(`${tabName}Tab`).classList.remove('hidden');
+
+        // Update active tab styling
+        document.querySelectorAll('.flex.border-b button').forEach(button => {
+            button.classList.remove('tab-active', 'text-gray-600');
+            button.classList.add('text-gray-600');
+        });
+
+        const activeButton = document.querySelector(`button[onclick="switchTab('${tabName}')"]`);
+        activeButton.classList.add('tab-active');
+        activeButton.classList.remove('text-gray-600');
+    }
+
+    function logout() {
+        localStorage.removeItem('authToken');
+        window.location.href = '/log.html';
+    }
+
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!authToken) {
+            window.location.href = '/log.html';
+            return;
+        }
+
+        // Set today's date as default for deadline
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('taskDeadline').value = today;
+
+        loadTasks();
+    });
+</script>
+<script>AOS.init();</script>
+</body>
+</html>

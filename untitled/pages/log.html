@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход - Smart To-Do List</title>
+    <link rel="stylesheet" href="/style/logs.css">
+</head>
+<body>
+<div class="wrapper">
+    <form id="loginForm">
+        <h2>Вход</h2>
+
+        <div class="input-group">
+            <span class="icon">
+                <ion-icon name="email"></ion-icon>
+            </span>
+            <input type="text" id="username" name="username" placeholder="Имя пользователя" required>
+        </div>
+
+        <div class="input-group">
+            <span class="icon">
+                <ion-icon name="lock-closed"></ion-icon>
+            </span>
+            <input type="password" id="password" name="password" placeholder="Пароль" required>
+        </div>
+
+        <button type="submit" class="btn">Войти</button>
+
+        <div class="sign-link">
+            <p>Нет аккаунта? <a href="/reg.html" class="register-link">Зарегистрируйтесь</a></p>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = {
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value
+        };
+
+        console.log('Отправка данных:', formData);
+
+        try {
+            const response = await fetch('/api/login', {  // Убрали http://localhost:3000
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            console.log('Ответ сервера:', response.status);
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Успех:', data);
+                alert('Вход успешен!');
+                window.location.href = '/index.html';
+            } else {
+                const error = await response.json();
+                console.log('Ошибка:', error);
+                alert('Ошибка: ' + error.error);
+            }
+        } catch (error) {
+            console.error('Ошибка сети:', error);
+            alert('Проверьте подключение к серверу. Ошибка: ' + error.message);
+        }
+    });
+</script>
+</body>
+</html>
