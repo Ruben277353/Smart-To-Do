@@ -1,0 +1,16 @@
+[
+  {
+    "id": "1758282333631",
+    "username": "qwe",
+    "email": "test@gmail.com",
+    "password": "$2b$10$sK6.jWyKrnneiw/ZZslouuNrk71.rE0/vSqTt/KCF02/ighKNTjDm",
+    "created_at": "2025-09-19T11:45:33.631Z"
+  },
+  {
+    "id": "1758282363166",
+    "username": "toto",
+    "email": "dffff277353@gmail.com",
+    "password": "$2b$10$h8/inPuJ2qeAdHFJj47CkO9toeChPDs35pO10vZTffTwLxz2HDsv2",
+    "created_at": "2025-09-19T11:46:03.166Z"
+  }
+]

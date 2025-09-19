@@ -44,7 +44,7 @@
         console.log('Отправка данных:', formData);
 
         try {
-            const response = await fetch('/api/login', {  // Убрали http://localhost:3000
+            const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -58,6 +58,12 @@
             if (response.ok) {
                 const data = await response.json();
                 console.log('Успех:', data);
+
+                // СОХРАНЯЕМ ТОКЕН В LOCALSTORAGE
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('userId', data.user.id);
+                localStorage.setItem('username', data.user.username);
+
                 alert('Вход успешен!');
                 window.location.href = '/index.html';
             } else {
