@@ -2,10 +2,18 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
+const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
 
-// Файл для хранения пользователей
-const USERS_FILE = 'users.json';
+// Создаем базу данных для пользователей
+const db = new sqlite3.Database('users.db', (err) => {
+    if (err) {
+        console.error('Ошибка подключения к базе данных:', err);
+    } else {
+        console.log('Подключение к базе данных пользователей установлено');
+    }
+});
+
 // Папка для хранения задач пользователей
 const TASKS_DIR = 'tasks';
 
@@ -14,27 +22,21 @@ if (!fs.existsSync(TASKS_DIR)) {
     fs.mkdirSync(TASKS_DIR);
 }
 
-// Функции для работы с пользователями
-function loadUsers() {
-    try {
-        if (fs.existsSync(USERS_FILE)) {
-            return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки пользователей:', error);
-    }
-    return [];
-}
+// Создаем таблицу пользователей при запуске
+db.serialize(() => {
+    db.run(`CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`, (err) => {
+        if (err) console.error('Ошибка создания таблицы users:', err);
+        else console.log('Таблица users готова');
+    });
+});
 
-function saveUsers(users) {
-    try {
-        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-    } catch (error) {
-        console.error('Ошибка сохранения пользователей:', error);
-    }
-}
-
-// Функции для работы с задачами
+// Функции для работы с задачами в JSON
 function getUserTasksFile(userId) {
     return path.join(TASKS_DIR, `tasks_${userId}.json`);
 }
@@ -55,6 +57,7 @@ function saveUserTasks(userId, tasks) {
     const tasksFile = getUserTasksFile(userId);
     try {
         fs.writeFileSync(tasksFile, JSON.stringify(tasks, null, 2));
+        console.log('Задачи сохранены для пользователя:', userId);
     } catch (error) {
         console.error('Ошибка сохранения задач пользователя', userId, ':', error);
     }
@@ -146,27 +149,19 @@ async function handleRegister(req, res, body) {
     }
 
     try {
-        const users = loadUsers();
-
-        // Проверяем, существует ли пользователь
-        if (users.find(u => u.username === username || u.email === email)) {
-            sendResponse(res, 400, { error: 'Пользователь уже существует' });
-            return;
-        }
-
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = {
-            id: Date.now().toString(),
-            username,
-            email,
-            password: hashedPassword,
-            created_at: new Date().toISOString()
-        };
 
-        users.push(newUser);
-        saveUsers(users);
-
-        sendResponse(res, 201, { message: 'Пользователь создан успешно' });
+        db.run(
+            'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+            [username, email, hashedPassword],
+            function(err) {
+                if (err) {
+                    sendResponse(res, 400, { error: 'Пользователь уже существует' });
+                    return;
+                }
+                sendResponse(res, 201, { message: 'Пользователь создан успешно' });
+            }
+        );
     } catch (error) {
         sendResponse(res, 500, { error: 'Ошибка сервера' });
     }
@@ -183,34 +178,43 @@ async function handleLogin(req, res, body) {
         return;
     }
 
-    try {
-        const users = loadUsers();
-        const user = users.find(u => u.username === username);
-
-        if (!user) {
-            sendResponse(res, 400, { error: 'Неверные данные' });
-            return;
-        }
-
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) {
-            sendResponse(res, 400, { error: 'Неверные данные' });
-            return;
-        }
-
-        // Простой токен (userid:username в base64)
-        const token = Buffer.from(`${user.id}:${username}`).toString('base64');
-
-        sendResponse(res, 200, {
-            token,
-            user: {
-                id: user.id,
-                username: user.username
+    db.get(
+        'SELECT * FROM users WHERE username = ?',
+        [username],
+        async (err, user) => {
+            if (err) {
+                console.log('Ошибка БД:', err.message);
+                sendResponse(res, 400, { error: 'Неверные данные' });
+                return;
             }
-        });
-    } catch (error) {
-        sendResponse(res, 500, { error: 'Ошибка сервера' });
-    }
+
+            if (!user) {
+                console.log('Пользователь не найден:', username);
+                sendResponse(res, 400, { error: 'Неверные данные' });
+                return;
+            }
+
+            console.log('Пользователь найден:', user.id);
+
+            const validPassword = await bcrypt.compare(password, user.password);
+            if (!validPassword) {
+                console.log('Неверный пароль');
+                sendResponse(res, 400, { error: 'Неверные данные' });
+                return;
+            }
+
+            const token = Buffer.from(`${user.id}:${username}`).toString('base64');
+            console.log('Токен создан для пользователя:', user.id);
+
+            sendResponse(res, 200, {
+                token,
+                user: {
+                    id: user.id,
+                    username: user.username
+                }
+            });
+        }
+    );
 }
 
 // Проверка авторизации
@@ -225,10 +229,19 @@ async function authenticate(req) {
         const decoded = Buffer.from(token, 'base64').toString('utf-8');
         const [userId, username] = decoded.split(':');
 
-        const users = loadUsers();
-        const user = users.find(u => u.id === userId && u.username === username);
-
-        return user ? { userId: user.id, username: user.username } : null;
+        return new Promise((resolve) => {
+            db.get(
+                'SELECT id FROM users WHERE id = ? AND username = ?',
+                [parseInt(userId), username],
+                (err, user) => {
+                    if (err || !user) {
+                        resolve(null);
+                    } else {
+                        resolve({ userId: user.id, username });
+                    }
+                }
+            );
+        });
     } catch (error) {
         return null;
     }
@@ -238,6 +251,7 @@ async function authenticate(req) {
 async function getTasks(req, res, userId) {
     try {
         const tasks = loadUserTasks(userId);
+        console.log('Загружено задач для пользователя', userId, ':', tasks.length);
         sendResponse(res, 200, tasks);
     } catch (error) {
         console.error('Ошибка получения задач:', error);
@@ -249,6 +263,9 @@ async function getTasks(req, res, userId) {
 async function createTask(req, res, body, userId) {
     try {
         const { text, priority, category, deadline } = body;
+
+        console.log('Создание задачи для пользователя:', userId);
+        console.log('Данные задачи:', { text, priority, category, deadline });
 
         if (!text || text.trim() === '') {
             sendResponse(res, 400, { error: 'Текст задачи обязателен' });
@@ -270,6 +287,7 @@ async function createTask(req, res, body, userId) {
         tasks.push(newTask);
         saveUserTasks(userId, tasks);
 
+        console.log('Задача создана с ID:', newTask.id);
         sendResponse(res, 201, {
             id: newTask.id,
             message: 'Задача успешно создана',
@@ -297,6 +315,11 @@ async function updateTask(req, res, body, userId, taskId) {
             ...body,
             updated_at: new Date().toISOString()
         };
+
+        // Конвертируем completed в boolean если нужно
+        if (body.completed !== undefined) {
+            updatedTask.completed = Boolean(body.completed);
+        }
 
         tasks[taskIndex] = updatedTask;
         saveUserTasks(userId, tasks);
@@ -421,7 +444,6 @@ const HOST = 'localhost';
 
 server.listen(PORT, HOST, () => {
     console.log(`Сервер запущен: http://${HOST}:${PORT}`);
-    console.log('Данные хранятся в JSON файлах');
-    console.log('Файл пользователей:', USERS_FILE);
-    console.log('Папка задач:', TASKS_DIR);
+    console.log('Пользователи: SQLite database (users.db)');
+    console.log('Задачи: JSON файлы в папке tasks/');
 });
